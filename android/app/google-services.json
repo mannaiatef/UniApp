@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "466856708365",
+    "project_id": "medapp-dc543",
+    "storage_bucket": "medapp-dc543.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466856708365:android:0a772e32efccd10213c844",
+        "android_client_info": {
+          "package_name": "com.example.demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANOtxq8rSuVHG1SQJyy3KyxFRlTmOPgdw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
