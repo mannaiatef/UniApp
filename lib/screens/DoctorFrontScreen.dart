@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../models/doctor.dart';
 import 'DoctorDetailScreen.dart';
+import '../services/medical_chat_service.dart';
 
 class DoctorFrontScreen extends StatefulWidget {
   const DoctorFrontScreen({super.key});
@@ -20,8 +21,107 @@ class _DoctorFrontScreenState extends State<DoctorFrontScreen> {
   double _calculateAverageRating(List<Map<String, dynamic>>? reviews) {
     if (reviews == null || reviews.isEmpty) return 0.0;
     final ratings = reviews.where((r) => r['rating'] != null).map((r) => r['rating'] as num);
-    if (ratings.isEmpty) return 0.0;
-    return ratings.reduce((a, b) => a + b) / ratings.length;
+    return ratings.isEmpty ? 0.0 : ratings.reduce((a, b) => a + b) / ratings.length;
+  }
+
+  void _showChatDialog(String doctorName) {
+    final TextEditingController _chatController = TextEditingController();
+    final List<Map<String, String>> _chatMessages = [];
+    bool _isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Chat with Medical Assistant for $doctorName'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _chatMessages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (_isLoading && index == _chatMessages.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final message = _chatMessages[index];
+                    return Align(
+                      alignment: message['role'] == 'user'
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: message['role'] == 'user'
+                              ? Colors.blue.shade100
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(message['text']!),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _chatController,
+                        decoration: InputDecoration(
+                          hintText: 'Ask a medical question...',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send, color: Color(0xFF003087)),
+                      onPressed: () async {
+                        if (_chatController.text.isEmpty) return;
+                        final userMessage = _chatController.text;
+                        setState(() {
+                          _chatMessages.add({'role': 'user', 'text': userMessage});
+                          _isLoading = true;
+                        });
+                        _chatController.clear();
+                        try {
+                          print('Sending message: $userMessage');
+                          final response = await MedicalChatService.sendMedicalMessage(userMessage);
+                          print('Response received: $response');
+                          setState(() {
+                            _chatMessages.add({'role': 'assistant', 'text': response});
+                            _isLoading = false;
+                          });
+                        } catch (e) {
+                          print('Error: $e');
+                          setState(() {
+                            _chatMessages.add({'role': 'assistant', 'text': 'Error: $e'});
+                            _isLoading = false;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: Color(0xFF003087))),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -147,7 +247,6 @@ class _DoctorFrontScreenState extends State<DoctorFrontScreen> {
                       final doctor = doctors[index];
                       final specialtyName = specialtyMap[doctor.specialtyId] ?? 'Unknown';
                       final averageRating = _calculateAverageRating(doctor.reviews);
-                      print('Doctor ${doctor.name} reviews: ${doctor.reviews}');
 
                       return Card(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -222,23 +321,32 @@ class _DoctorFrontScreenState extends State<DoctorFrontScreen> {
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: doctor.status == 'Available'
-                                        ? Colors.green.shade100
-                                        : Colors.red.shade100,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    doctor.status ?? 'Unknown',
-                                    style: TextStyle(
-                                      color: doctor.status == 'Available'
-                                          ? Colors.green.shade800
-                                          : Colors.red.shade800,
-                                      fontWeight: FontWeight.bold,
+                                Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: doctor.status == 'Available'
+                                            ? Colors.green.shade100
+                                            : Colors.red.shade100,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        doctor.status ?? 'Unknown',
+                                        style: TextStyle(
+                                          color: doctor.status == 'Available'
+                                              ? Colors.green.shade800
+                                              : Colors.red.shade800,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 8),
+                                    IconButton(
+                                      icon: const Icon(Icons.chat, color: Color(0xFF003087)),
+                                      onPressed: () => _showChatDialog(doctor.name),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(width: 8),
                                 const Icon(Icons.arrow_forward_ios, color: Color(0xFF003087), size: 20),
