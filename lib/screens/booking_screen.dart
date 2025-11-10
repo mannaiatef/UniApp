@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/doctor.dart';
 import '../models/appointment.dart';
 import '../services/appointment_service.dart';
+import '../services/auth_service.dart';
 
 class BookingScreen extends StatefulWidget {
   final Doctor doctor;
@@ -96,7 +98,21 @@ class _BookingScreenState extends State<BookingScreen> {
               child: ElevatedButton(
                 onPressed: (_selectedDate != null && _selectedTime != null)
                     ? () async {
+                        final authService = Provider.of<AuthService>(context, listen: false);
+                        final patient = await authService.getCurrentPatient();
+
+                        if (patient == null || patient.id == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Connexion requise pour réserver un rendez-vous.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
                         final appointment = Appointment(
+                          patientId: patient.id,
                           doctor: widget.doctor,
                           dateTime: DateTime(
                             _selectedDate!.year,
@@ -107,6 +123,7 @@ class _BookingScreenState extends State<BookingScreen> {
                           ),
                         );
                         await AppointmentService.saveAppointment(appointment);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Rendez-vous réservé avec succès!')),
                         );

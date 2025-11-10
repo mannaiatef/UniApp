@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/appointment.dart';
 import '../services/appointment_service.dart';
 import '../services/notification_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/edit_appointment_dialog.dart';
 
 class AppointmentsScreen extends StatefulWidget {
@@ -13,15 +15,35 @@ class AppointmentsScreen extends StatefulWidget {
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
   late Future<List<Appointment>> _appointmentsFuture;
+  int? _patientId;
 
   @override
   void initState() {
     super.initState();
-    _loadAppointments();
+    _appointmentsFuture = Future.value([]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAppointments();
+    });
   }
 
-  void _loadAppointments() {
-    _appointmentsFuture = AppointmentService.getAppointments();
+  Future<void> _loadAppointments() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final patient = await authService.getCurrentPatient();
+
+    if (!mounted) return;
+
+    if (patient == null || patient.id == null) {
+      setState(() {
+        _patientId = null;
+        _appointmentsFuture = Future.value([]);
+      });
+      return;
+    }
+
+    setState(() {
+      _patientId = patient.id;
+      _appointmentsFuture = AppointmentService.getAppointments(patientId: patient.id!);
+    });
   }
 
   Future<void> _deleteAppointment(int id) async {
@@ -32,12 +54,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       await NotificationService.cancelNotification(id + 1000);
       
       // Supprimer le rendez-vous de la base de données
-      await AppointmentService.deleteAppointment(id);
+      await AppointmentService.deleteAppointment(id, patientId: _patientId);
       
       if (mounted) {
-        setState(() {
-          _loadAppointments();
-        });
+        await _loadAppointments();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Rendez-vous supprimé avec succès'),
@@ -67,9 +87,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         onSave: (updatedAppointment) async {
           try {
             await AppointmentService.updateAppointment(updatedAppointment);
-            setState(() {
-              _loadAppointments();
-            });
+            await _loadAppointments();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Rendez-vous modifié avec succès'),

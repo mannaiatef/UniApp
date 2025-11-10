@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(documentsDirectory.path, 'patient_database.db');
     return await openDatabase(
       path,
-      version: 6, // Incremented version to add photoUrl column migration
+      version: 7, // Incremented version to link appointments to patients
       onCreate: _onCreate,
       onUpgrade: _onUpgrade, // Added onUpgrade callback
     );
@@ -76,17 +76,22 @@ class DatabaseHelper {
         // (mais cela supprimerait les données, donc on évite si possible)
       }
     }
+    if (oldVersion < 7) {
+      await _ensureAppointmentsPatientIdColumnExists(db);
+    }
   }
 
   Future _createAppointmentsTable(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS appointments(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patientId INTEGER,
         doctor_name TEXT NOT NULL,
         doctor_specialty TEXT NOT NULL,
         doctor_address TEXT NOT NULL,
         doctor_image TEXT NOT NULL,
-        date_time TEXT NOT NULL
+        date_time TEXT NOT NULL,
+        FOREIGN KEY (patientId) REFERENCES patients (id) ON DELETE CASCADE
       )
     ''');
   }
@@ -132,13 +137,16 @@ class DatabaseHelper {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS appointments(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patientId INTEGER,
           doctor_name TEXT NOT NULL,
           doctor_specialty TEXT NOT NULL,
           doctor_address TEXT NOT NULL,
           doctor_image TEXT NOT NULL,
-          date_time TEXT NOT NULL
+          date_time TEXT NOT NULL,
+          FOREIGN KEY (patientId) REFERENCES patients (id) ON DELETE CASCADE
         )
       ''');
+      await _ensureAppointmentsPatientIdColumnExists(db);
     } catch (e) {
       print('Error ensuring appointments table exists: $e');
     }
@@ -261,6 +269,25 @@ class DatabaseHelper {
       print('Erreur lors de la vérification/ajout de la colonne photoUrl: $e');
       // Si l'erreur persiste, on la laisse remonter
       rethrow;
+    }
+  }
+
+  Future<void> ensureAppointmentsPatientLink() async {
+    Database db = await database;
+    await _ensureAppointmentsPatientIdColumnExists(db);
+  }
+
+  Future<void> _ensureAppointmentsPatientIdColumnExists(Database db) async {
+    try {
+      final columns = await db.rawQuery('PRAGMA table_info(appointments)');
+      final hasPatientId = columns.any((column) => column['name'] == 'patientId');
+
+      if (!hasPatientId) {
+        print('Ajout de la colonne patientId à la table appointments');
+        await db.execute('ALTER TABLE appointments ADD COLUMN patientId INTEGER');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'ajout de la colonne patientId: $e');
     }
   }
 

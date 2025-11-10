@@ -31,30 +31,59 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPatientData();
-    _loadAppointments();
-    _loadTreatments();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
   }
 
-  void _loadTreatments() {
-    _treatmentsFuture = _treatmentService.getTreatmentsByPatient(_currentPatient?.id ?? 1);
+  Future<void> _initializeData() async {
+    await _loadPatientData();
+    await _loadAppointments();
+    _loadTreatments();
   }
 
   Future<void> _loadPatientData() async {
     if (!mounted) return;
     final authService = Provider.of<AuthService>(context, listen: false);
     final patient = await authService.getCurrentPatient();
-    
-    if (mounted) {
+
+    if (!mounted) return;
+    setState(() {
+      _currentPatient = patient;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _loadAppointments() async {
+    if (!mounted) return;
+    final patientId = _currentPatient?.id;
+
+    if (patientId != null) {
+      setState(() {
+        _appointmentsFuture = AppointmentService.getAppointments(patientId: patientId);
+      });
+    } else {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final patient = await authService.getCurrentPatient();
+      if (!mounted) return;
       setState(() {
         _currentPatient = patient;
-        _isLoading = false;
+        final id = patient?.id;
+        _appointmentsFuture = id != null
+            ? AppointmentService.getAppointments(patientId: id)
+            : Future.value([]);
       });
     }
   }
 
-  void _loadAppointments() {
-    _appointmentsFuture = AppointmentService.getAppointments();
+  void _loadTreatments() {
+    if (!mounted) return;
+    final patientId = _currentPatient?.id;
+    setState(() {
+      _treatmentsFuture = patientId != null
+          ? _treatmentService.getTreatmentsByPatient(patientId)
+          : Future.value([]);
+    });
   }
 
   @override
@@ -290,23 +319,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: () {
+                            final patientId = _currentPatient?.id;
+                            if (patientId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Veuillez vous connecter pour gérer vos traitements.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => AddEditTreatmentDialog(
-                                  patientId: _currentPatient?.id ?? 1,
+                                  patientId: patientId,
                                   onSave: (treatment) async {
                                     await _treatmentService.insertTreatment(treatment);
+                                    if (!mounted) return;
                                     setState(() {
-                                      _treatmentsFuture = _treatmentService.getTreatmentsByPatient(_currentPatient?.id ?? 1);
+                                      _treatmentsFuture = _treatmentService.getTreatmentsByPatient(patientId);
                                     });
                                   },
                                 ),
                               ),
-                            ).then((_) {
-                              setState(() {
-                                _appointmentsFuture = AppointmentService.getAppointments();
-                              });
+                            ).then((_) async {
+                              await _loadAppointments();
+                              _loadTreatments();
                             });
                           },
                           icon: const Icon(Icons.add),
@@ -500,10 +540,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (_) => const DoctorListScreen()),
-                            ).then((_) {
-                              setState(() {
-                                _loadAppointments();
-                              });
+                            ).then((_) async {
+                              await _loadPatientData();
+                              await _loadAppointments();
+                              _loadTreatments();
                             });
                           },
                           style: ElevatedButton.styleFrom(

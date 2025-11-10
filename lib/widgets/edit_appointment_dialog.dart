@@ -104,6 +104,7 @@ class _EditAppointmentDialogState extends State<EditAppointmentDialog> {
           onPressed: () {
             final updatedAppointment = Appointment(
               id: widget.appointment.id,
+              patientId: widget.appointment.patientId,
               doctor: widget.appointment.doctor,
               dateTime: _selectedDateTime,
             );
