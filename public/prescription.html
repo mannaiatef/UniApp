@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Détails de la Prescription - MedAssist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        :root {
+            --primary-blue: #006AF6;
+            --medium-blue: #2196F3;
+            --accent-blue: #42A5F5;
+            --light-blue: #E3F2FD;
+            --background-grey: #F8FAFC;
+            --card-white: #FFFFFF;
+            --text-primary: #1A237E;
+            --text-secondary: #5C6BC0;
+            --text-grey: #78909C;
+            --divider-color: #E0E7FF;
+            --success-green: #4CAF50;
+            --warning-orange: #FF9800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background-grey);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .main-container {
+            max-width: 900px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header avec gradient */
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--medium-blue), var(--accent-blue));
+            border-radius: 24px 24px 0 0;
+            padding: 40px 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 106, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .prescription-id {
+            font-size: 16px;
+            opacity: 0.95;
+            font-weight: 500;
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+
+        /* Conteneur principal */
+        .content-container {
+            background: var(--card-white);
+            border-radius: 0 0 24px 24px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 106, 246, 0.08);
+            margin-top: -10px;
+            position: relative;
+            z-index: 0;
+        }
+
+        /* Section Info Cards */
+        .info-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: var(--light-blue);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1.5px solid var(--divider-color);
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 106, 246, 0.15);
+        }
+
+        .info-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-grey);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 30px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* Diagnostic & Notes Cards */
+        .diagnostic-card,
+        .notes-card {
+            background: var(--card-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1.5px solid var(--divider-color);
+            box-shadow: 0 2px 8px rgba(0, 106, 246, 0.05);
+        }
+
+        .diagnostic-card h4,
+        .notes-card h4 {
+            font-size: 14px;
+            color: var(--text-grey);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diagnostic-card p,
+        .notes-card p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Medicine Cards */
+        .medicines-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .medicine-card {
+            background: linear-gradient(135deg, var(--light-blue), rgba(255, 255, 255, 0.8));
+            border-radius: 20px;
+            padding: 0;
+            border: 1.5px solid var(--divider-color);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 106, 246, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .medicine-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 106, 246, 0.15);
+        }
+
+        .medicine-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--medium-blue));
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .medicine-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .medicine-name {
+            flex: 1;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .medicine-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .medicine-body {
+            padding: 20px;
+        }
+
+        .medicine-detail {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+        }
+
+        .medicine-detail:last-child {
+            margin-bottom: 0;
+        }
+
+        .medicine-detail i {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .medicine-detail-content {
+            flex: 1;
+        }
+
+        .medicine-detail-label {
+            font-size: 12px;
+            color: var(--text-grey);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .medicine-detail-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .medicine-effects {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--light-blue);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .medicine-effects-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .medicine-effects-content {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            background: var(--card-white);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 30px;
+            border: 2px solid var(--divider-color);
+            box-shadow: 0 4px 12px rgba(0, 106, 246, 0.08);
+        }
+
+        .signature-container {
+            text-align: center;
+            padding: 20px;
+            background: var(--light-blue);
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+
+        .signature-image {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: white;
+            padding: 10px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--divider-color);
+            color: var(--text-grey);
+            font-size: 13px;
+        }
+
+        /* Loader */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--light-blue);
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            color: var(--text-grey);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Error Message */
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            background: var(--card-white);
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 106, 246, 0.08);
+        }
+
+        .error-icon {
+            font-size: 64px;
+            color: #e53935;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .error-details {
+            font-size: 14px;
+            color: var(--text-grey);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: var(--light-blue);
+            border-radius: 16px;
+            border: 2px dashed var(--divider-color);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: var(--text-grey);
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            color: var(--text-grey);
+            font-size: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 30px 20px;
+                border-radius: 20px 20px 0 0;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content-container {
+                padding: 20px;
+                border-radius: 0 0 20px 20px;
+            }
+
+            .info-section {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .medicine-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .medicine-name {
+                font-size: 18px;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .medicine-card {
+            animation: slideIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .medicine-card:nth-child(1) { animation-delay: 0.1s; }
+        .medicine-card:nth-child(2) { animation-delay: 0.2s; }
+        .medicine-card:nth-child(3) { animation-delay: 0.3s; }
+        .medicine-card:nth-child(4) { animation-delay: 0.4s; }
+        .medicine-card:nth-child(5) { animation-delay: 0.5s; }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvLR2oJp_WNojHeJRvj2C-VwZxaxvWwZU",
+            authDomain: "medassist-e6135.firebaseapp.com",
+            projectId: "medassist-e6135",
+            storageBucket: "medassist-e6135.appspot.com",
+            messagingSenderId: "1029128192487",
+            appId: "1:1029128192487:web:bdc72e767218b3588b3d42"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function uint8ToBase64(u8) {
+            const CHUNK = 0x8000;
+            let result = '';
+            for (let i = 0; i < u8.length; i += CHUNK) {
+                const slice = u8.subarray(i, Math.min(i + CHUNK, u8.length));
+                result += String.fromCharCode.apply(null, slice);
+            }
+            return btoa(result);
+        }
+
+        function anyToBase64(sig) {
+            if (!sig) return null;
+            if (typeof sig === 'string') return sig;
+            if (sig instanceof Uint8Array) return uint8ToBase64(sig);
+            if (Array.isArray(sig)) return uint8ToBase64(Uint8Array.from(sig));
+            if (sig.bytes) return uint8ToBase64(Uint8Array.from(sig.bytes));
+            return null;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const docId = params.get("doc");
+
+        async function loadPrescription() {
+            const container = document.getElementById("content");
+
+            if (!docId) {
+                container.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="error-message">ID prescription manquant</div>
+                        <div class="error-details">Veuillez scanner un QR code valide.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "prescriptions", docId);
+                const snap = await getDoc(docRef);
+
+                if (!snap.exists()) {
+                    container.innerHTML = `
+                        <div class="error-container">
+                            <div class="error-icon"><i class="fas fa-file-medical"></i></div>
+                            <div class="error-message">Prescription introuvable</div>
+                            <div class="error-details">La prescription avec l'ID "${docId}" n'existe pas.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const data = snap.data();
+                const base64Sig = anyToBase64(data.doctor_signature);
+
+                // Formatage des médicaments
+                const medicinesHTML = (data.medicines && data.medicines.length)
+                    ? data.medicines.map((m, index) => {
+                        const effects = m.effects_description || '';
+                        return `
+                            <div class="medicine-card" style="animation-delay: ${index * 0.1}s">
+                                <div class="medicine-header">
+                                    <div class="medicine-icon">
+                                        <i class="fas fa-pills"></i>
+                                    </div>
+                                    <div class="medicine-name">${m.medicine_name || 'Médicament inconnu'}</div>
+                                    <div class="medicine-badge">Prescription</div>
+                                </div>
+                                <div class="medicine-body">
+                                    <div class="medicine-detail">
+                                        <i class="fas fa-flask"></i>
+                                        <div class="medicine-detail-content">
+                                            <div class="medicine-detail-label">Dosage</div>
+                                            <div class="medicine-detail-value">${m.dosage || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="medicine-detail">
+                                        <i class="fas fa-clock"></i>
+                                        <div class="medicine-detail-content">
+                                            <div class="medicine-detail-label">Fréquence</div>
+                                            <div class="medicine-detail-value">${m.frequency || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="medicine-detail">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div class="medicine-detail-content">
+                                            <div class="medicine-detail-label">Durée</div>
+                                            <div class="medicine-detail-value">${m.duration || '-'} jours</div>
+                                        </div>
+                                    </div>
+                                    ${m.instructions ? `
+                                    <div class="medicine-detail">
+                                        <i class="fas fa-info-circle"></i>
+                                        <div class="medicine-detail-content">
+                                            <div class="medicine-detail-label">Instructions</div>
+                                            <div class="medicine-detail-value">${m.instructions}</div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    ${effects ? `
+                                    <div class="medicine-effects">
+                                        <div class="medicine-effects-title">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Effets Secondaires
+                                        </div>
+                                        <div class="medicine-effects-content">${effects}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')
+                    : `
+                        <div class="empty-state">
+                            <i class="fas fa-pills"></i>
+                            <p>Aucun médicament prescrit.</p>
+                        </div>
+                    `;
+
+                // Affichage principal
+                container.innerHTML = `
+                    <div class="main-container">
+                        <div class="header">
+                            <div class="header-content">
+                                <h1><i class="fas fa-file-medical"></i> Prescription Médicale</h1>
+                                <div class="prescription-id">N° ${data.prescription_id || '---'}</div>
+                            </div>
+                        </div>
+
+                        <div class="content-container">
+                            <div class="info-section">
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Médecin</div>
+                                        <div class="info-value">${data.doctor_name || '---'}</div>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-icon" style="background: var(--accent-blue);">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Patient</div>
+                                        <div class="info-value">${data.patient_name || '---'}</div>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-icon" style="background: var(--medium-blue);">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Date</div>
+                                        <div class="info-value">${data.date_prescription || '---'}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="section-title">
+                                <i class="fas fa-stethoscope"></i>
+                                <span>Diagnostic & Notes</span>
+                            </div>
+
+                            <div class="diagnostic-card">
+                                <h4><i class="fas fa-heartbeat"></i> Diagnostic</h4>
+                                <p>${data.diagnostic || 'Aucun diagnostic'}</p>
+                            </div>
+
+                            <div class="notes-card">
+                                <h4><i class="fas fa-sticky-note"></i> Notes du Médecin</h4>
+                                <p>${data.notes_medecin || 'Aucune note'}</p>
+                            </div>
+
+                            <div class="section-title">
+                                <i class="fas fa-pills"></i>
+                                <span>Médicaments Prescrits</span>
+                            </div>
+
+                            <div class="medicines-grid">
+                                ${medicinesHTML}
+                            </div>
+
+                            ${base64Sig ? `
+                            <div class="section-title">
+                                <i class="fas fa-signature"></i>
+                                <span>Signature du Médecin</span>
+                            </div>
+                            <div class="signature-section">
+                                <div class="signature-container">
+                                    <img src="data:image/png;base64,${base64Sig}" alt="Signature du médecin" class="signature-image" />
+                                </div>
+                            </div>
+                            ` : ''}
+
+                            <div class="footer">
+                                <i class="fas fa-shield-alt"></i> © ${new Date().getFullYear()} MedAssist — Prescription sécurisée et vérifiée
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <div class="error-message">Erreur de chargement</div>
+                        <div class="error-details">${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Afficher le loader
+        document.getElementById("content").innerHTML = `
+            <div class="loader-container">
+                <div class="loader"></div>
+                <div class="loader-text">Chargement de la prescription...</div>
+            </div>
+        `;
+
+        loadPrescription();
+    </script>
+</head>
+
+<body>
+    <div id="content">
+        <!-- Contenu chargé dynamiquement -->
+    </div>
+</body>
+</html>

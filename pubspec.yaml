@@ -1,0 +1,48 @@
+name: uniapp
+description: "Application Flutter de gestion de prescriptions médicales avec SQLite & Firebase"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- Bases de données locales ---
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  http: ^1.2.2
+
+  # --- Firebase ---
+  firebase_core: ^3.6.0
+  cloud_firestore: ^5.4.4
+
+  # --- UI et animations ---
+  lottie: ^3.1.2
+  signature: ^5.4.0
+  qr_flutter: ^4.1.0
+  cupertino_icons: ^1.0.8
+
+  # --- Localisations et internationalisation ---
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2   # ✅ compatible avec Flutter 3.24+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/list2.json
+    - assets/images/home.jpg
+    - assets/images/list.json
+    - assets/images/doctor.png
+    - assets/images/empty.png
+    - assets/images/success.json
